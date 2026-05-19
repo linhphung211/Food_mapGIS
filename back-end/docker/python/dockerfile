@@ -10,7 +10,11 @@ ENV PATH="/root/.local/bin:$PATH"
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
+    g++ \
     curl \
+    gdal-bin \
+    libgdal-dev \
+    python3-gdal \
     && rm -rf /var/lib/apt/lists/*
 
 # Cài đặt Poetry

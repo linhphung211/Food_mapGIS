@@ -1,13 +1,15 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from storefront.models import FoodPlace, Category
-from .serializers import FoodPlaceDetailSerializer
+from .serializers import FoodPlaceDetailSerializer, FoodPlaceMapSerializer, FoodPlaceTopRatedSerializer
 from user.permissions import IsMerchant # Class IsMerchant chúng ta đã viết
 
 class FoodPlaceViewSet(viewsets.ModelViewSet):
     serializer_class = FoodPlaceDetailSerializer
 
     def get_queryset(self):
+        print("====== get_queryset CALLED ======", flush=True)
         user = self.request.user
         # Nếu là Merchant đăng nhập, chỉ hiện quán của họ để quản lý
         if self.action in ['update', 'partial_update', 'destroy'] or \
@@ -17,14 +19,14 @@ class FoodPlaceViewSet(viewsets.ModelViewSet):
         # Mặc định (cho khách xem bản đồ) trả về tất cả quán
         return FoodPlace.objects.all()
 
-    # def get_serializer_class(self):
-    #     # Nếu yêu cầu từ bản đồ, dùng MapSerializer (GeoJSON)
-    #     if self.request.query_params.get('format') == 'geojson':
-    #         return FoodPlaceMapSerializer
-    #     return FoodPlaceDetailSerializer
+    def get_serializer_class(self):
+        # Nếu yêu cầu từ bản đồ, dùng MapSerializer (GeoJSON)
+        if self.request.query_params.get('format') == 'geojson':
+            return FoodPlaceMapSerializer
+        return FoodPlaceDetailSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'top_rated']:
             permission_classes = [permissions.IsAuthenticatedOrReadOnly]
         else:
             permission_classes = [IsMerchant]
@@ -48,3 +50,12 @@ class FoodPlaceViewSet(viewsets.ModelViewSet):
             data['is_owner'] = True
             
         return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def top_rated(self, request):
+        """
+        API trả về danh sách top 10 quán ăn có đánh giá cao nhất.
+        """
+        top_places = FoodPlace.objects.filter(total_reviews__gt=0).order_by('-avg_rating', '-total_reviews')[:10]
+        serializer = FoodPlaceTopRatedSerializer(top_places, many=True)
+        return Response(serializer.data)

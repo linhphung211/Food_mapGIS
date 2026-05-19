@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',  # Thêm dòng này
     'rest_framework',
+    'drf_spectacular',
     'corsheaders',
     'user', 
     'channels',
@@ -94,6 +95,20 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication', # Thêm dòng này
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Foodmap API',
+    'DESCRIPTION': 'API cho ứng dụng Foodmap - Tìm kiếm địa điểm ăn uống',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False, # Tắtserve schema ở file .yml
+    # Cấu hình bảo mật cho Swagger UI
+    'SECURITY': [
+        {
+            'Bearer': []
+        }
+    ],
 }
 
 ROOT_URLCONF = 'core.urls'
@@ -129,16 +144,21 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your-email@gmail.com'
 EMAIL_HOST_PASSWORD = 'your-app-password'
 
+# Tự động nhận diện nếu đang chạy trong Docker
+REDIS_HOST = 'redis' if os.path.exists('/.dockerenv') else '127.0.0.1'
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        # "LOCATION": "redis://redis:6379/1", # Tên service redis trong docker-compose
-        "LOCATION": "redis://127.0.0.1:6379/1", # Dùng localhost khi chạy local
+        "LOCATION": f"redis://{REDIS_HOST}:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
 }
+
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/0"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:6379/0"
 
 DATABASES = {
     'default': {

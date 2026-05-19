@@ -1,8 +1,9 @@
 from rest_framework import serializers
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
+from rest_framework_gis.fields import GeometryField
 
 from storefront.models import FoodPlace, FoodPlaceImage, Category
-# Lưu ý: Import ReviewSerializer từ app review nếu bạn đã viết nó
-# từ review.serializers import ReviewSerializer 
+from review.api.serializers import ReviewSerializer
 
 class FoodPlaceImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,8 +15,10 @@ class FoodPlaceDetailSerializer(serializers.ModelSerializer):
     category_name = serializers.ReadOnlyField(source='category.name')
     # Lấy danh sách ảnh của quán
     images = FoodPlaceImageSerializer(many=True, read_only=True)
-    # Lấy danh sách bình luận (Nếu app review đã có dữ liệu)
-    # reviews = ReviewSerializer(many=True, read_only=True)
+    # Lấy danh sách bình luận
+    reviews = ReviewSerializer(many=True, read_only=True)
+    # Cho phép nhận GeoJSON dict khi tạo/cập nhật quán
+    geom = GeometryField()
 
     class Meta:
         model = FoodPlace
@@ -23,18 +26,20 @@ class FoodPlaceDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'address', 'category', 'category_name', 
             'phone_number', 'opening_time', 'closing_time', 
             'min_price', 'max_price', 'description', 
-            'avg_rating', 'total_reviews', 'images', 'geom', #'reviews'
+            'avg_rating', 'total_reviews', 'images', 'geom', 'reviews'
         ]
         read_only_fields = ['avg_rating', 'total_reviews', 'id']
 
-# class FoodPlaceMapSerializer(GeoFeatureModelSerializer):
-#     """Serializer dành riêng cho hiển thị bản đồ (GeoJSON)"""
-#     category_name = serializers.ReadOnlyField(source='category.name')
+class FoodPlaceMapSerializer(GeoFeatureModelSerializer):
+    """Serializer dành riêng cho hiển thị bản đồ (GeoJSON)"""
+    category_name = serializers.ReadOnlyField(source='category.name')
     
-#     class Meta:
-#         model = FoodPlace
-#         geo_field = 'geom'
-#         fields = ['fid', 'name', 'category_name', 'avg_rating']
+    class Meta:
+        model = FoodPlace
+        geo_field = 'geom'
+        id_field = 'id'
+        # Các trường trả về trong thuộc tính properties của GeoJSON (để hiển thị Popup)
+        fields = ['id', 'name', 'category_name', 'avg_rating', 'total_reviews', 'address', 'min_price', 'max_price']
 
 class FoodPlaceTopRatedSerializer(serializers.ModelSerializer):
     # Lấy tên danh mục để hiển thị (ví dụ: "Bún phở")
