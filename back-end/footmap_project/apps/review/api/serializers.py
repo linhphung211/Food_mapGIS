@@ -17,13 +17,14 @@ class ReviewReplySerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
+    user_avatar = serializers.ImageField(source='user.avatar', read_only=True)
     # Nest reply (từ bảng review_reply) vào response – read_only, None nếu chưa có reply
     reply = ReviewReplySerializer(read_only=True, default=None)
 
     class Meta:
         model = Review
         fields = [
-            'id', 'user', 'username', 'food_place',
+            'id', 'user', 'username', 'user_avatar', 'food_place',
             'rating', 'comment', 'created_at', 'updated_at',
             'reply',
         ]

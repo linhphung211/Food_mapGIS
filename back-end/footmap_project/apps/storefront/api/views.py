@@ -112,7 +112,8 @@ class FoodPlaceViewSet(viewsets.ModelViewSet):
     def top_rated(self, request):
         """
         API trả về danh sách top 10 quán ăn có đánh giá cao nhất.
+        (Được lọc theo category nhờ sử dụng get_queryset)
         """
-        top_places = FoodPlace.objects.filter(total_reviews__gt=0).order_by('-avg_rating', '-total_reviews')[:10]
-        serializer = FoodPlaceTopRatedSerializer(top_places, many=True)
+        qs = self.get_queryset().filter(total_reviews__gt=0).order_by('-avg_rating', '-total_reviews')[:10]
+        serializer = FoodPlaceTopRatedSerializer(qs, many=True)
         return Response(serializer.data)

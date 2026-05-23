@@ -179,20 +179,20 @@ class UserViewSet(viewsets.GenericViewSet):
         session.refresh_expiry() 
 
         # QUAN TRỌNG: Trả về dữ liệu cho Frontend
-        return Response(UserProfileSerializer(user).data, status=status.HTTP_200_OK)
+        return Response(UserProfileSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def update_profile(self, request):
         user = request.user
         # partial=True cho phép cập nhật chỉ một vài trường mà không bắt buộc gửi hết
-        serializer = UserProfileSerializer(user, data=request.data, partial=True)
+        serializer = UserProfileSerializer(user, data=request.data, partial=True, context={'request': request})
         
         if serializer.is_valid():
-            serializer.save()
-            return Response({
-                "message": "Cập nhật thông tin hiệp sĩ thành công!",
-                "data": serializer.data
-            }, status=status.HTTP_200_OK)
+                serializer.save()
+                return Response({
+                    "message": "Cập nhật thông tin hiệp sĩ thành công!",
+                    "data": serializer.data
+                }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
