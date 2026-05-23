@@ -235,10 +235,16 @@ AWS_S3_FILE_OVERWRITE = False
 AWS_S3_QUERYSTRING_AUTH = False 
 AWS_DEFAULT_ACL = None
 
-# ===== CORS Configuration (cho Frontend React) =====
+# ===== CORS Configuration (cho Frontend) =====
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',    # Vite dev server
     'http://127.0.0.1:5173',
+    'http://localhost:3000',    # Merchant dashboard (python http.server)
+    'http://127.0.0.1:3000',   # Merchant dashboard (python http.server)
+    'http://localhost:5500',    # VS Code Live Server (User front-end)
+    'http://127.0.0.1:5500',   # VS Code Live Server (User front-end)
+    'http://localhost:8080',    # http-server fallback
+    'http://127.0.0.1:8080',   # http-server fallback
 ]
 
 CORS_ALLOW_HEADERS = [

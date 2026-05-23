@@ -11,7 +11,53 @@ from django.contrib.auth.models import update_last_login
 import random
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.conf import settings
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from rest_framework import serializers as drf_serializers
 
+@extend_schema_view(
+    register=extend_schema(tags=['Users'], summary="Đăng ký tài khoản"),
+    login=extend_schema(
+        tags=['Users'], 
+        summary="Đăng nhập",
+        request=inline_serializer(
+            name="LoginRequest",
+            fields={
+                "username": drf_serializers.CharField(),
+                "password": drf_serializers.CharField()
+            }
+        )
+    ),
+    logout=extend_schema(
+        tags=['Users'], 
+        summary="Đăng xuất",
+        request=inline_serializer(
+            name="LogoutRequest",
+            fields={"session_id": drf_serializers.CharField()}
+        )
+    ),
+    me=extend_schema(tags=['Users'], summary="Lấy thông tin cá nhân"),
+    update_profile=extend_schema(tags=['Users'], summary="Cập nhật thông tin"),
+    send_otp=extend_schema(
+        tags=['Users'], 
+        summary="Gửi mã OTP",
+        request=inline_serializer(
+            name="SendOTPRequest",
+            fields={"email": drf_serializers.EmailField()}
+        )
+    ),
+    verify_otp=extend_schema(
+        tags=['Users'], 
+        summary="Xác thực OTP",
+        request=inline_serializer(
+            name="VerifyOTPRequest",
+            fields={
+                "email": drf_serializers.EmailField(),
+                "otp": drf_serializers.CharField()
+            }
+        )
+    )
+)
 class UserViewSet(viewsets.GenericViewSet):
     def get_serializer_class(self):
         if self.action == 'register': return RegisterSerializer

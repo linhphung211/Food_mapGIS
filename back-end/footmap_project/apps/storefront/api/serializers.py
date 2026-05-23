@@ -5,6 +5,11 @@ from rest_framework_gis.fields import GeometryField
 from storefront.models import FoodPlace, FoodPlaceImage, Category
 from review.api.serializers import ReviewSerializer
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'icon_marker']
+
 class FoodPlaceImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = FoodPlaceImage
@@ -33,6 +38,7 @@ class FoodPlaceDetailSerializer(serializers.ModelSerializer):
 class FoodPlaceMapSerializer(GeoFeatureModelSerializer):
     """Serializer dành riêng cho hiển thị bản đồ (GeoJSON)"""
     category_name = serializers.ReadOnlyField(source='category.name')
+    geom = GeometryField()
     
     class Meta:
         model = FoodPlace
