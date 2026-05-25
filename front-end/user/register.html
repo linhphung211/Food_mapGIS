@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - Food Map Việt Nam</title>
+    <meta name="description" content="Tạo tài khoản miễn phí để tham gia cộng đồng ẩm thực Food Map Việt Nam.">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-body">
+
+    <div class="app-container">
+        <div class="mockup-screen auth-screen">
+
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <h2>TẠO TÀI KHOẢN</h2>
+                </div>
+
+                <!-- Thông báo -->
+                <div id="reg-error" class="auth-alert auth-alert--error hidden"></div>
+                <div id="reg-success" class="auth-alert auth-alert--success hidden"></div>
+
+                <form id="register-form" novalidate>
+                    <div class="input-group">
+                        <label for="reg-username">Username (Tên đăng nhập)</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="reg-username" placeholder="Tên bắt đầu bằng chữ, có số hoặc ký tự đặc biệt..." required autocomplete="username">
+                        </div>
+                        <small class="input-hint">Ví dụ: myname123 hoặc linh@food</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="reg-email">Email</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input type="email" id="reg-email" placeholder="Nhập email của bạn..." autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="reg-password">Password (Mật khẩu)</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="reg-password" placeholder="Tạo mật khẩu bảo mật..." required autocomplete="new-password">
+                            <button type="button" class="btn-toggle-pw" id="toggle-reg-pw" title="Hiện/ẩn mật khẩu">
+                                <i class="fa-regular fa-eye" id="toggle-reg-pw-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btn-register">
+                        <span id="btn-reg-text">Đăng Ký</span>
+                        <span id="btn-reg-spinner" class="btn-spinner hidden"></span>
+                    </button>
+                </form>
+
+                <p class="auth-redirect">Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a></p>
+            </div>
+
+            <div class="right-decor-tools">
+                <div class="btn-tool-diamond"><i class="fa-solid fa-mobile-screen"></i></div>
+                <div class="btn-tool-diamond"><i class="fa-regular fa-comment-dots"></i></div>
+                <div class="btn-tool-diamond"><i class="fa-regular fa-circle-question"></i></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { register } from './api.js';
+
+        // Toggle hiện/ẩn mật khẩu
+        document.getElementById('toggle-reg-pw').addEventListener('click', () => {
+            const pwInput = document.getElementById('reg-password');
+            const icon = document.getElementById('toggle-reg-pw-icon');
+            if (pwInput.type === 'password') {
+                pwInput.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                pwInput.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        });
+
+        function showError(msg) {
+            const el = document.getElementById('reg-error');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            document.getElementById('reg-success').classList.add('hidden');
+        }
+        function showSuccess(msg) {
+            const el = document.getElementById('reg-success');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            document.getElementById('reg-error').classList.add('hidden');
+        }
+        function setLoading(on) {
+            document.getElementById('btn-register').disabled = on;
+            document.getElementById('btn-reg-text').textContent = on ? 'Đang xử lý...' : 'Đăng Ký';
+            document.getElementById('btn-reg-spinner').classList.toggle('hidden', !on);
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('reg-error').classList.add('hidden');
+
+            const username = document.getElementById('reg-username').value.trim();
+            const email    = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+
+            if (!username || !password) { showError('Vui lòng nhập Username và Password.'); return; }
+
+            setLoading(true);
+            const result = await register(username, email, password);
+            setLoading(false);
+
+            if (result.ok) {
+                showSuccess('Đăng ký thành công! Đang chuyển về trang đăng nhập...');
+                setTimeout(() => { window.location.href = 'login.html'; }, 1200);
+            } else {
+                showError(result.error);
+            }
+        });
+    </script>
+</body>
+</html>

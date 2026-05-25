@@ -245,6 +245,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5500',   # VS Code Live Server (User front-end)
     'http://localhost:8080',    # http-server fallback
     'http://127.0.0.1:8080',   # http-server fallback
+    'http://localhost:5501',    # Vite dev server
+    'http://127.0.0.1:5501',
 ]
 
 CORS_ALLOW_HEADERS = [

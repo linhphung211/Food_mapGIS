@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Của Tôi - Food Map Việt Nam</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body class="auth-body">
+
+    <div class="app-container">
+        <div class="mockup-screen auth-screen">
+            
+            <div class="left-decor-box" style="background-color: #34495e;">
+                <i class="fa-solid fa-user-shield" style="font-size: 80px; margin-bottom: 20px;"></i>
+                <p>Cập nhật thông tin cá nhân của Hiệp Sĩ!</p>
+            </div>
+
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <i class="fa-solid fa-address-card"></i>
+                    <h2>HỒ SƠ CỦA TÔI</h2>
+                </div>
+
+                <!-- Thông báo lỗi -->
+                <div id="profile-error" class="auth-alert auth-alert--error hidden"></div>
+                <!-- Thông báo thành công -->
+                <div id="profile-success" class="auth-alert auth-alert--success hidden"></div>
+
+                <form id="profile-form" novalidate>
+                    <div class="input-group">
+                        <label>Tên đăng nhập (Username)</label>
+                        <div class="input-wrapper" style="background:#e9ecef;">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                            <input type="text" id="profile-username" readonly disabled style="color:#6c757d; font-weight:bold;">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="profile-email">Email</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input type="email" id="profile-email" placeholder="Ví dụ: hero@gmail.com">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="profile-birthday">Ngày sinh</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-cake-candles"></i>
+                            <input type="date" id="profile-birthday">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="profile-avatar">Ảnh đại diện (Chọn file)</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-image"></i>
+                            <input type="file" id="profile-avatar" accept="image/*" style="padding-top:10px;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btn-save-profile">
+                        <span id="btn-save-text">Lưu Thay Đổi</span>
+                        <span id="btn-save-spinner" class="btn-spinner hidden"></span>
+                    </button>
+                </form>
+
+                <p class="auth-redirect"><a href="index.html"><i class="fa-solid fa-arrow-left"></i> Quay lại Bản đồ</a></p>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { getMe, updateUserProfile, isLoggedIn } from './api.js?v=7';
+
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        const form = document.getElementById('profile-form');
+        const errorBox = document.getElementById('profile-error');
+        const successBox = document.getElementById('profile-success');
+        const btnSave = document.getElementById('btn-save-profile');
+        const btnText = document.getElementById('btn-save-text');
+        const btnSpinner = document.getElementById('btn-save-spinner');
+
+        function showMessage(msg, type) {
+            errorBox.classList.add('hidden');
+            successBox.classList.add('hidden');
+            
+            if (type === 'error') {
+                errorBox.textContent = msg;
+                errorBox.classList.remove('hidden');
+            } else {
+                successBox.textContent = msg;
+                successBox.classList.remove('hidden');
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const data = await getMe();
+                if (data) {
+                    document.getElementById('profile-username').value = data.username || '';
+                    document.getElementById('profile-email').value = data.email || '';
+                    document.getElementById('profile-birthday').value = data.birthday || '';
+                    // File input cannot be populated with URL. Just show current if any
+                    if (data.avatar) {
+                        const label = document.querySelector('label[for="profile-avatar"]');
+                        label.innerHTML = `Ảnh đại diện (Chọn file) - <a href="${data.avatar}" target="_blank">Xem ảnh hiện tại</a>`;
+                    }
+                }
+            } catch (err) {
+                showMessage('Không thể tải thông tin cá nhân', 'error');
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('profile-email').value;
+            const birthday = document.getElementById('profile-birthday').value;
+            const avatarFile = document.getElementById('profile-avatar').files[0];
+
+            // Xoá thông báo cũ
+            errorBox.classList.add('hidden');
+            successBox.classList.add('hidden');
+
+            // Hiển thị loading
+            btnSave.disabled = true;
+            btnText.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                const formData = new FormData();
+                if (email) formData.append('email', email);
+                if (birthday) formData.append('birthday', birthday);
+                if (avatarFile) formData.append('avatar', avatarFile);
+
+                await updateUserProfile(formData);
+                showMessage('Cập nhật thông tin cá nhân thành công!', 'success');
+            } catch (err) {
+                showMessage(err.message || 'Cập nhật thất bại, vui lòng kiểm tra lại.', 'error');
+            } finally {
+                btnSave.disabled = false;
+                btnText.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+            }
+        });
+
+        // Load data on start
+        loadProfile();
+    </script>
+</body>
+</html>

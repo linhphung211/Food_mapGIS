@@ -62,10 +62,10 @@ class FoodPlaceViewSet(viewsets.ModelViewSet):
                 Prefetch('reviews', queryset=Review.objects.select_related('user', 'reply__merchant'))
             )
 
-        # Nếu là Merchant thao tác hoặc yêu cầu manage, chỉ trả về quán của họ
+        # Nếu là Merchant thao tác hoặc yêu cầu manage, chỉ lấy quán của họ
         if self.action in ['update', 'partial_update', 'destroy'] or \
            (self.action == 'list' and self.request.query_params.get('manage') == 'true'):
-            return qs.filter(owner=user)
+            qs = qs.filter(owner=user)
             
         # Lọc theo danh mục nếu có query parameter 'category'
         category_name = self.request.query_params.get('category')
@@ -117,3 +117,15 @@ class FoodPlaceViewSet(viewsets.ModelViewSet):
         qs = self.get_queryset().filter(total_reviews__gt=0).order_by('-avg_rating', '-total_reviews')[:10]
         serializer = FoodPlaceTopRatedSerializer(qs, many=True)
         return Response(serializer.data)
+
+    @extend_schema(tags=['Food Places'], summary="Upload ảnh cho quán ăn")
+    @action(detail=True, methods=['post'])
+    def upload_image(self, request, pk=None):
+        food_place = self.get_object()
+        if 'image' not in request.FILES:
+            return Response({'error': 'Vui lòng cung cấp file ảnh (trường image).'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from storefront.models import FoodPlaceImage
+        image = request.FILES['image']
+        FoodPlaceImage.objects.create(food_place=food_place, image=image)
+        return Response({'status': 'Tải ảnh lên thành công.'}, status=status.HTTP_201_CREATED)

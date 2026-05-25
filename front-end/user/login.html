@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Food Map Việt Nam</title>
+    <meta name="description" content="Đăng nhập để khám phá bản đồ ẩm thực Việt Nam, xem địa chỉ quán và bình luận cộng đồng.">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-body">
+
+    <div class="app-container">
+        <div class="mockup-screen auth-screen">
+            
+            <div class="left-decor-box">
+                <i class="fa-solid fa-bowl-food"></i>
+                <p>Khám phá hàng nghìn quán ăn trên bản đồ!</p>
+            </div>
+
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <h2>ĐĂNG NHẬP</h2>
+                </div>
+
+                <!-- Thông báo lỗi -->
+                <div id="login-error" class="auth-alert auth-alert--error hidden"></div>
+                <!-- Thông báo thành công -->
+                <div id="login-success" class="auth-alert auth-alert--success hidden"></div>
+
+                <form id="login-form" novalidate>
+                    <div class="input-group">
+                        <label for="username-input">Username</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="username-input" placeholder="Nhập tên đăng nhập..." required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password-input">Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="password-input" placeholder="Nhập mật khẩu..." required autocomplete="current-password">
+                            <button type="button" class="btn-toggle-pw" id="toggle-pw" title="Hiện/ẩn mật khẩu">
+                                <i class="fa-regular fa-eye" id="toggle-pw-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btn-login">
+                        <span id="btn-login-text">Đăng Nhập</span>
+                        <span id="btn-login-spinner" class="btn-spinner hidden"></span>
+                    </button>
+                </form>
+
+                <p class="auth-redirect">Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+            </div>
+
+            <div class="right-decor-tools">
+                <div class="btn-tool-diamond"><i class="fa-solid fa-mobile-screen"></i></div>
+                <div class="btn-tool-diamond"><i class="fa-regular fa-comment-dots"></i></div>
+                <div class="btn-tool-diamond"><i class="fa-regular fa-circle-question"></i></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { login } from './api.js';
+
+        // Nếu đã đăng nhập rồi, chuyển thẳng về index
+        const token = localStorage.getItem('access_token');
+        if (token) window.location.href = 'index.html';
+
+        // Toggle hiện/ẩn mật khẩu
+        document.getElementById('toggle-pw').addEventListener('click', () => {
+            const pwInput = document.getElementById('password-input');
+            const icon = document.getElementById('toggle-pw-icon');
+            if (pwInput.type === 'password') {
+                pwInput.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                pwInput.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        });
+
+        function showError(msg) {
+            const el = document.getElementById('login-error');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            document.getElementById('login-success').classList.add('hidden');
+        }
+        function showSuccess(msg) {
+            const el = document.getElementById('login-success');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+        }
+        function setLoading(on) {
+            document.getElementById('btn-login').disabled = on;
+            document.getElementById('btn-login-text').textContent = on ? 'Đang xử lý...' : 'Đăng Nhập';
+            document.getElementById('btn-login-spinner').classList.toggle('hidden', !on);
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('login-error').classList.add('hidden');
+            
+            const username = document.getElementById('username-input').value.trim();
+            const password = document.getElementById('password-input').value;
+            if (!username || !password) { showError('Vui lòng nhập đầy đủ thông tin.'); return; }
+
+            setLoading(true);
+            const result = await login(username, password);
+            setLoading(false);
+
+            if (result.ok) {
+                showSuccess('Đăng nhập thành công! Đang chuyển hướng...');
+                setTimeout(() => { window.location.href = 'index.html'; }, 800);
+            } else {
+                showError(result.error);
+            }
+        });
+    </script>
+</body>
+</html>

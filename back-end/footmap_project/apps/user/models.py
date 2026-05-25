@@ -16,7 +16,7 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=USER)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField(upload_to='avatars', blank=True, null=True)
     birthday = models.DateField(blank=True, null=True)
     
     is_email_verified = models.BooleanField(default=False)
