@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Map Việt Nam – Merchant</title>
+    <meta name="description" content="Khám phá bản đồ ẩm thực Việt Nam - tìm quán ăn, đọc và chia sẻ bình luận cộng đồng.">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css?v=9">
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="mockup-screen">
+            
+            <div id="map"></div>
+
+            <!-- ════ TOP BAR ════ -->
+            <div class="top-bar">
+                <div class="brand-title">
+                     FOOD MAP <span>MERCHANT</span>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="address-input" placeholder="tìm kiếm địa điểm...">
+                    <button id="btn-search"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <div class="category-bar" id="category-bar">
+                    <button class="btn-category active" data-type="all">Tất Cả</button>
+                    <!-- Categories will be loaded here dynamically via API -->
+                </div>
+            </div>
+
+            <!-- /* ================= COMPONENT PANELS ================= */ -->
+            <!-- ════ LEFT PANEL ════ -->
+            <div class="left-panel">
+                <!-- User card -->
+                <div class="user-card" id="user-profile-box">
+                    <div class="avatar">
+                        <i class="fa-solid fa-user-secret" id="user-avatar-icon"></i>
+                    </div>
+                    <div class="user-info" id="user-status-text"></div>
+                </div>
+                <!-- My Places box -->
+                <div class="ranking-box" id="ranking-box">
+                    <h4><i class="fa-solid fa-store" style="color: #4CAF50;"></i> Các Quán Của Tôi</h4>
+                    <div class="ranking-list" id="ranking-list">
+                        <div class="popup-loading" style="text-align:center; padding: 10px; font-size:11px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải...</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ════ RIGHT PANEL ════ -->
+            <div class="right-panel">
+                <div class="tool-group bottom-tools">
+                    <!-- <button class="btn-tool-diamond" title="Cài đặt"><i class="fa-solid fa-gear"></i></button> -->
+                    
+                    <button class="btn-tool-diamond" id="btn-add-place" title="Thêm Quán Mới">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    
+                    <!-- <button class="btn-tool-diamond" title="Trợ giúp"><i class="fa-solid fa-question"></i></button> -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modals for Place Management -->
+    <!-- Add/Edit Place Modal -->
+    <div id="place-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="place-modal-title">Thêm Quán Mới</h2>
+                <button class="modal-close" id="place-modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="place-form">
+                    <input type="hidden" id="place-id" />
+                    <input type="hidden" id="place-lat" />
+                    <input type="hidden" id="place-lng" />
+                    <div class="form-group">
+                        <label>Tên quán *</label>
+                        <input type="text" id="place-name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Danh mục *</label>
+                        <select id="place-category" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Địa chỉ *</label>
+                        <input type="text" id="place-address" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Điện thoại</label>
+                        <input type="text" id="place-phone" />
+                    </div>
+                    <div class="form-group">
+                        <label>Giờ mở cửa</label>
+                        <input type="time" id="place-open" />
+                    </div>
+                    <div class="form-group">
+                        <label>Giờ đóng cửa</label>
+                        <input type="time" id="place-close" />
+                    </div>
+                    <div class="form-group">
+                        <label>Giá thấp nhất (VNĐ)</label>
+                        <input type="number" id="place-min-price" />
+                    </div>
+                    <div class="form-group">
+                        <label>Giá cao nhất (VNĐ)</label>
+                        <input type="number" id="place-max-price" />
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Mô tả</label>
+                        <textarea id="place-desc" rows="3"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="place-modal-cancel">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Heatmap Plugin -->
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <!-- Script chính dùng ES Module để import api.js -->
+    <script type="module" src="script.js?v=10"></script>
+
+    <!-- Script riêng xử lý UI user card (không cần module) -->
+    <script type="module">
+        import { isLoggedIn, getUsername, getAvatar, logout } from './api.js?v=7';
+
+        const statusBox  = document.getElementById('user-status-text');
+        const profileBox = document.getElementById('user-profile-box');
+        const avatarIcon = document.getElementById('user-avatar-icon');
+
+        if (isLoggedIn()) {
+            const name = getUsername() || 'Thành Viên';
+            const avatarUrl = getAvatar();
+            
+            if (avatarUrl) {
+                // Thay thế icon fa-user-astronaut bằng thẻ <img>
+                const img = document.createElement('img');
+                img.src = avatarUrl;
+                img.alt = "Avatar";
+                img.style.width = "45px";
+                img.style.height = "45px";
+                img.style.minWidth = "45px";
+                img.style.minHeight = "45px";
+                img.style.borderRadius = "50%";
+                img.style.objectFit = "cover";
+                avatarIcon.parentNode.replaceChild(img, avatarIcon);
+            } else {
+                avatarIcon.className = 'fa-solid fa-user-astronaut';
+            }
+
+            statusBox.innerHTML = `
+                <h3 title="${name}">${name.length > 8 ? name.slice(0,8)+'…' : name}</h3>
+                <p class="logout-link" id="btn-logout-link"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</p>`;
+            
+            document.getElementById('btn-logout-link').addEventListener('click', async (e) => {
+                e.stopPropagation(); // Không trigger click của parent
+                if (confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
+                    await logout();
+                    window.location.reload();
+                }
+            });
+
+            document.querySelector('.avatar').addEventListener('click', () => {
+                window.location.href = 'profile.html';
+            });
+            document.querySelector('.avatar').style.cursor = 'pointer';
+            document.querySelector('.avatar').title = 'Xem thông tin cá nhân';
+        } else {
+            avatarIcon.className = 'fa-solid fa-user-secret';
+            statusBox.innerHTML = `
+                <h3>Khách</h3>
+                <p class="login-link"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</p>`;
+            
+            profileBox.addEventListener('click', () => {
+                window.location.href = 'login.html';
+            });
+        }
+    </script>
+</body>
+</html>
