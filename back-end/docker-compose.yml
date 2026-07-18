@@ -4,44 +4,25 @@ services:
     container_name: foodmap_redis_container
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build:
-      # Context đặt ở '.' (thư mục Back-end/) để Dockerfile thấy pyproject.toml
       context: .
-      dockerfile: docker/python/dockerfile
-    container_name: foodmap_web_container
-    # command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
+      dockerfile: Dockerfile
+    container_name: foodmap_spring_container
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      # Override từ .env nếu cần
+      REDIS_HOST: redis
     depends_on:
-      - redis
-
-  # CELERY WORKER: Thằng này đi gửi OTP, gửi Mail (Làm việc ngay)
-  celery_worker:
-    build:
-      context: .
-      dockerfile: ./docker/python/dockerfile
-    container_name: foodmap_worker
-    command: celery -A core worker -l info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-
-  # CELERY BEAT: Thằng này canh đồng hồ để xóa User 30 ngày (Lên lịch)
-  celery_beat:
-    build:
-      context: .
-      dockerfile: ./docker/python/dockerfile
-    container_name: foodmap_beat
-    command: celery -A core beat -l info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
