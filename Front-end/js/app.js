@@ -1,0 +1,2 @@
+renderAuth();
+renderComments();
